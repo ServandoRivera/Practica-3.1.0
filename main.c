@@ -1,0 +1,60 @@
+/*
+ * File:   nmain..c
+ * Author: SERVARIVERA
+ *
+ * Created on 23 de septiembre de 2018, 10:41 AM
+ */
+
+#include <xc.h>
+#include "CONFIG.h"
+#define _XTAL_FREQ 32000000
+
+void main(void) {
+    //OSCILADOR A 32MHz
+    OSCFRQbits.HFFRQ = 0b110;
+    
+    // PUERTOS 
+    PORTA=0;
+    PORTB=0;
+    ANSELA=0;
+    ANSELB=0;
+    TRISA=0b00001111;
+    TRISB=0b00001111;
+    
+    //PULL-UP INTERNAS 
+    WPUA0=1;
+    WPUB0=1;
+    
+    // IOC CONFIGURACION
+    IOCBPbits.IOCBP0=1; //INTERRUPCION IOC POR FLANCO DE SUBIDA
+    IOCBF0=0; //LIMPIA FLAG DEL BIT INDIVIDUAL EN RBO
+    IOCANbits.IOCAN0=1; //INTERRUPCION IOC POR FLANCO DE BAJADA
+    IOCAPbits.IOCAP0=1; //INTERRUPCION IOC POR FLANCO DE SUBIDA
+    IOCAF0=0; //LIMPIA FLAG DEL BIT INDIVIDUAL EN RA0
+    
+    //INTERRUPCIONES
+    PIR0bits.IOCIF=0; //LIMPIA FLAG GLOBAL
+    PIE0bits.IOCIE=1; //INTERRUPCION IOC HABILITADA
+    INTCONbits.GIE=1; //INTERUPCION GLOBAL
+    
+    //CLICLO INFINITO
+    while(1);
+    return;
+}
+
+void __interrupt () IOC (void) {
+    //VERIFICA SI LA INTERRUPCION OCURRIO EN RB0
+    if(IOCBF0==1){
+        LATA7 = LATA7 + 1; //CAMBIA EL ESTADO DE RA7
+        __delay_ms(300);
+        IOCBF0=0;          //LIMPIA LA BANDERA DE INTERRUPCION RB0
+        PIR0bits.IOCIF=0;  //LIMPIA FLAG IOC
+    }  
+    
+    //VERIFICA SI LA INTERRUPCION OCURRIO EN RA0
+    if (IOCAF0==1){
+        LATB7 = LATB7 + 1; // CAMBIA EL ESTADO DE RB7
+        IOCAF0=0;         //LIMPIA LA BANDERA DE INTERRUPCION RA0
+        PIR0bits.IOCIF=0; //LIMPIA FLAG IOC
+    }
+}
